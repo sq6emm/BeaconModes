@@ -96,6 +96,31 @@ void runTests() {
   Serial.print(g_lastFreqs[0]);
   Serial.print(" space=");
   Serial.println(g_lastFreqs[1]);
+
+  // DigitalMode: a single value naming mode+submode, e.g. for a per-beacon
+  // "const DigitalMode digitalMode = Q65Submode(...);" declaration. Checked
+  // via its parameters only, not a full transmit() -- Q65-120D's 85 symbols
+  // at 1333ms each would take ~113s per loop iteration otherwise.
+  const DigitalMode dmQ65120D = Q65Submode(Q65::Duration::T120, Q65::Bandwidth::D);
+  Serial.print("DigitalMode Q65-120D spacing (want 6.0): ");
+  Serial.println(BeaconModes::toneSpacingHz(dmQ65120D.mode, 1.0f, dmQ65120D.q65sub, dmQ65120D.jt4sub), 4);
+  Serial.print("DigitalMode Q65-120D period ms (want 1333.3): ");
+  Serial.println(BeaconModes::symbolPeriodMs(dmQ65120D.mode, dmQ65120D.q65sub), 1);
+
+  const DigitalMode dmPi4 = PI4Submode();
+  Serial.print("DigitalMode PI4 mode is BeaconMode::PI4: ");
+  Serial.println(dmPi4.mode == BeaconMode::PI4);
+
+  // Exercise the DigitalMode -> transmit() dispatch path end-to-end with CW
+  // (fast) rather than a full FSK transmit (Q65-120D/PI4 would take tens of
+  // seconds to over a minute per call, too slow for this repeating loop).
+  const DigitalMode dmCw = CWSubmode(20, 400.0f); // 20 WPM, faster than the 12 WPM default
+  g_freqCalls = 0;
+  bool cwDmOk = BeaconModes::transmit(dmCw, "TEST", 1000.0, 1.0, mockSetFrequency);
+  Serial.print("DigitalMode CW(20wpm) transmit(\"TEST\") ok=");
+  Serial.print(cwDmOk);
+  Serial.print(" setFrequency() calls=");
+  Serial.println(g_freqCalls);
 }
 
 void setup() {

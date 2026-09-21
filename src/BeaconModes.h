@@ -47,6 +47,31 @@ struct CWSubmode {
   CWSubmode() = default;
   CWSubmode(uint8_t w, float s) : wpm(w), spaceShiftHz(s) {}
 };
+// PI4 carries no submode data (only one configuration exists) -- this
+// exists purely so DigitalMode below can be constructed with a PI4 choice
+// the same way it's constructed with a Q65Submode/JT4Submode/CWSubmode.
+struct PI4Submode {};
+
+// A single named value bundling "which mode, with which submode" so a
+// whole "what should this slot transmit" decision can be one line where a
+// beacon's other per-profile settings (carrier, freqMulti, CALLSIGN,
+// LOCATOR) are already declared, e.g.:
+//   const DigitalMode digitalMode = Q65Submode(Q65::Duration::T60, Q65::Bandwidth::D); // Q65-60D
+//   const DigitalMode digitalMode = JT4Submode(JT4::Submode::G);                       // JT4G
+//   const DigitalMode digitalMode = PI4Submode();                                      // PI4
+//   const DigitalMode digitalMode = CWSubmode(12, 400.0f);                             // CW, 12 WPM
+// Pass it straight to the transmit() overload below instead of picking
+// fields out of it by hand.
+struct DigitalMode {
+  BeaconMode mode;
+  Q65Submode q65sub;
+  JT4Submode jt4sub;
+  CWSubmode cwsub;
+  DigitalMode(Q65Submode s) : mode(BeaconMode::Q65), q65sub(s) {}
+  DigitalMode(JT4Submode s) : mode(BeaconMode::JT4), jt4sub(s) {}
+  DigitalMode(PI4Submode) : mode(BeaconMode::PI4) {}
+  DigitalMode(CWSubmode s) : mode(BeaconMode::CW), cwsub(s) {}
+};
 
 class BeaconModes {
 public:
@@ -90,4 +115,14 @@ public:
                         float freqMulti, SetFrequencyFn setFrequency,
                         Q65Submode q65sub = {}, JT4Submode jt4sub = {},
                         CWSubmode cwsub = {});
+
+  // Same as above, but taking one DigitalMode value instead of a mode plus
+  // three separate submode structs -- the natural call to pair with a
+  // `const DigitalMode digitalMode = ...;` declared alongside a beacon's
+  // other per-profile settings (see DigitalMode's doc comment above).
+  static bool transmit(const DigitalMode &digitalMode, const char *message,
+                        double markHz, float freqMulti, SetFrequencyFn setFrequency) {
+    return transmit(digitalMode.mode, message, markHz, freqMulti, setFrequency,
+                     digitalMode.q65sub, digitalMode.jt4sub, digitalMode.cwsub);
+  }
 };
