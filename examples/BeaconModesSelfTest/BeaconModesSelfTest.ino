@@ -2,9 +2,20 @@
 //
 // Verifies Q65Encoder against three known-good message -> tone-sequence
 // pairs (pulled from a real, on-air-tested Q65 beacon's previously
-// hand-computed tables) and exercises PI4/JT4 encoding so a compile+upload
-// also confirms JTEncode links correctly.
+// hand-computed tables) and exercises PI4/JT4/CW encoding+transmit so a
+// compile+upload also confirms JTEncode and CWLibrary link correctly.
 #include <BeaconModes.h>
+
+// Mock "synthesizer" for exercising CW's transmit()-only path (see
+// BeaconModes.h's class doc comment for why CW has no encode()): just
+// counts calls and remembers the last two distinct frequencies asked for
+// (mark and space), instead of driving real hardware.
+double g_lastFreqs[2] = {-1, -1};
+uint32_t g_freqCalls = 0;
+void mockSetFrequency(double freqHz) {
+  g_freqCalls++;
+  if (freqHz != g_lastFreqs[0]) { g_lastFreqs[1] = g_lastFreqs[0]; g_lastFreqs[0] = freqHz; }
+}
 
 struct Q65Test {
   const char *msg;
@@ -71,6 +82,20 @@ void runTests() {
   Serial.println(JT4::toneSpacingHz(JT4::Submode::A), 3);
   Serial.print("JT4D spacing (want 39.375, the non-doubling step): ");
   Serial.println(JT4::toneSpacingHz(JT4::Submode::D), 3);
+
+  // CW: transmit() is CW's only entry point (no encode()); confirm it
+  // actually keys mark/space through the callback and returns promptly.
+  g_freqCalls = 0;
+  g_lastFreqs[0] = g_lastFreqs[1] = -1;
+  bool cwOk = BeaconModes::transmit(BeaconMode::CW, "TEST", 1000.0, 1.0, mockSetFrequency);
+  Serial.print("CW transmit(\"TEST\") ok=");
+  Serial.print(cwOk);
+  Serial.print(" setFrequency() calls=");
+  Serial.print(g_freqCalls);
+  Serial.print(" mark=");
+  Serial.print(g_lastFreqs[0]);
+  Serial.print(" space=");
+  Serial.println(g_lastFreqs[1]);
 }
 
 void setup() {
