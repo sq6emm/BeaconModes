@@ -9,7 +9,7 @@ namespace JT4 {
 
 constexpr uint16_t SYMBOL_COUNT = 207; // JT4_SYMBOL_COUNT in JTEncode.h, fixed for every submode
 constexpr uint8_t TONE_COUNT = 4;
-constexpr uint16_t SYMBOL_PERIOD_MS = 229; // fixed for every submode (~47s/207 symbols per 1-min slot)
+constexpr float SYMBOL_PERIOD_MS = 2520.0f * 1000.0f / 11025.0f; // 228.571ms (4.375 baud), fixed for every submode (~47.3s/207 symbols per 1-min slot)
 
 // Tone-spacing submode. Values verified against the public JT4 spacing
 // table (spacing does NOT cleanly double at every step -- C to D is a

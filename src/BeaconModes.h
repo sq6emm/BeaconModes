@@ -101,8 +101,9 @@ public:
 
   // One-shot transmit: for CW, sends `message` in Morse (see CWEncoder.h);
   // for the FSK modes, encodes the message then for each symbol calls
-  // setFrequency(markHz + toneIndex*spacing) followed by
-  // delay(symbolPeriodMs(mode, q65sub)). Mirrors the SetFrequency-callback
+  // setFrequency(markHz + toneIndex*spacing) and holds it until that
+  // symbol's slot ends, timed from the start of the transmission so
+  // symbols don't drift. Mirrors the SetFrequency-callback
   // style CWLibrary/ADF4157 already use elsewhere in this codebase. Leaves
   // the synth wherever the last symbol/character left it -- callers that
   // need to restore the resting/carrier frequency should call

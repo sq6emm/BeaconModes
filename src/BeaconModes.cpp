@@ -66,10 +66,18 @@ bool BeaconModes::transmit(BeaconMode mode, const char *message, double markHz,
   if (n == 0) return false;
 
   double spacing = toneSpacingHz(mode, freqMulti, q65sub, jt4sub);
-  uint32_t periodMs = (uint32_t)(symbolPeriodMs(mode, q65sub) + 0.5f);
+  // Each symbol ends at start + (i+1)*period, so neither ms rounding nor
+  // the time setFrequency() takes accumulates over the transmission.
+  // Unsigned subtraction keeps this correct across micros() wrapping.
+  uint32_t periodUs = (uint32_t)(symbolPeriodMs(mode, q65sub) * 1000.0f + 0.5f);
+  uint32_t startUs = micros();
   for (uint16_t i = 0; i < n; i++) {
     setFrequency(markHz + tones[i] * spacing);
-    delay(periodMs);
+    int32_t remainingUs = (int32_t)(startUs + (uint32_t)(i + 1) * periodUs - micros());
+    if (remainingUs > 0) {
+      delay(remainingUs / 1000);
+      delayMicroseconds(remainingUs % 1000);
+    }
   }
   return true;
 }

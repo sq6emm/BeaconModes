@@ -12,7 +12,7 @@ namespace PI4 {
 
 constexpr uint16_t SYMBOL_COUNT = 146;
 constexpr uint8_t TONE_COUNT = 4; // tone values 0..3
-constexpr uint16_t SYMBOL_PERIOD_MS = 167; // 166.667ms, per OZ2M's reference
+constexpr float SYMBOL_PERIOD_MS = 1000.0f / 6.0f; // 166.667ms (6 baud), per OZ2M's reference
 constexpr float TONE_SPACING_HZ = 234.375f; // divide by freqMulti for the actual synth output
 constexpr uint8_t MAX_MESSAGE_LEN = 8;
 
