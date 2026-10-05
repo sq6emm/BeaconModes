@@ -41,6 +41,17 @@ float BeaconModes::symbolPeriodMs(BeaconMode mode, Q65Submode q65sub) {
   return 0;
 }
 
+uint16_t BeaconModes::startOffsetMs(BeaconMode mode, Q65Submode q65sub) {
+  switch (mode) {
+    case BeaconMode::CW: return 0;
+    case BeaconMode::PI4: return 0;
+    case BeaconMode::JT4: return 1000;
+    case BeaconMode::Q65:
+      return (q65sub.duration == Q65::Duration::T15 || q65sub.duration == Q65::Duration::T30) ? 500 : 1000;
+  }
+  return 0;
+}
+
 float BeaconModes::toneSpacingHz(BeaconMode mode, float freqMulti, Q65Submode q65sub, JT4Submode jt4sub) {
   float base;
   switch (mode) {

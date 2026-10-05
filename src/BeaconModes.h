@@ -91,6 +91,15 @@ public:
   static uint16_t maxSymbols(BeaconMode mode); // 0 for CW
   static uint8_t toneCount(BeaconMode mode);   // 0 for CW
   static float symbolPeriodMs(BeaconMode mode, Q65Submode q65sub = {}); // 0 for CW
+  // How long after the start of its T/R period a transmission must start for
+  // receivers to decode it at DT = 0. WSJT-X's own modulator (Modulator.cpp)
+  // starts Q65-15/30 at 0.5 s and Q65-60 and longer, and JT4, at 1.0 s; its
+  // decoders report DT relative to that. PI4 starts on the period boundary
+  // (OZ2M); CW has no timing convention.
+  static uint16_t startOffsetMs(BeaconMode mode, Q65Submode q65sub = {});
+  static uint16_t startOffsetMs(const DigitalMode &digitalMode) {
+    return startOffsetMs(digitalMode.mode, digitalMode.q65sub);
+  }
   // Tone spacing in Hz at the fundamental (pre-multiplier) synth frequency,
   // already divided by freqMulti so the actual on-air spacing stays
   // constant across bands -- the same convention MGMBeacon.ino already uses
